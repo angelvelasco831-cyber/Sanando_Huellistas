@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanando Huellita - Inventario</title>
+<link rel="stylesheet" href="estilosEM.css">
+<link rel="stylesheet" href="estilosEMR.css">
+<script src="https://kit.fontawesome.com/d748c5e5cf.js" crossorigin="anonymous"></script>
+<style>
+#buscarBtn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #F28482;
+  background-color: #F28482;
+  color: white;
+  cursor: pointer;
+  margin-left: 4px;
+}
+#buscarBtn:hover {
+  background-color: #e06666;
+}
+.busqueda-container {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  max-width: 400px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button id="toggleMenu" aria-label="Abrir menú">☰</button>
+  <img src="imagenes/mm.png" alt="Logo Sanando Huellita" class="logo" />
+  <h1>Inventario</h1>
+</header>
+
+<aside id="menuLateral" class="oculto">
+  <ul>
+    <li><a href="MenuRecepcion.html">INICIO</a></li>
+    <li><a href="ClientesR.html">CLIENTES</a></li>
+    <li><a href="MascotasR.html">MASCOTAS</a></li>
+    <li><a href="CitasR.html">CITAS</a></li>
+    <li><a href="InventariR.html" class="activo">INVENTARIO</a></li>
+  </ul>
+</aside>
+
+<main>
+  <div class="area-empleado">
+    <h2>Gestión de Inventario</h2>
+    <div class="imagen-empleados">
+      <img src="imagenes/Inventario.png" alt="Inventario">
+    </div>
+    <p class="descripcion">
+      Aquí puedes ver, editar o eliminar los productos del inventario. Para agregar uno nuevo, haz clic en “Agregar Producto”.
+    </p>
+
+    <!-- BUSCADOR CON LUPA -->
+    <div class="busqueda-container">
+      <input type="text" id="buscarProducto" placeholder="Buscar producto..." style="padding:8px;border-radius:6px;border:1px solid #F28482;width:100%;">
+      <button id="buscarBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+
+    <div class="contenido">
+      <table class="table-empleados" id="tablaInventario">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="botones">
+      <button class="btn" onclick="window.location.href='AgregarInventario.html'">Agregar Producto</button>
+    </div>
+  </div>
+</main>
+
+<script>
+const menu = document.getElementById('menuLateral');
+const boton = document.getElementById('toggleMenu');
+const main = document.querySelector('main');
+
+boton.addEventListener('click', () => {
+  menu.classList.toggle('oculto');
+  main.classList.toggle('reducido');
+});
+
+let productos = [];
+
+// --- CARGAR INVENTARIO ---
+async function cargarInventario(){
+  const res = await fetch("../Controlador/inventarioControlador.php?accion=listar");
+  productos = await res.json();
+  mostrarProductos(productos);
+}
+
+// --- MOSTRAR PRODUCTOS ---
+function mostrarProductos(lista){
+  const tabla = document.querySelector("#tablaInventario tbody");
+  tabla.innerHTML = "";
+  lista.forEach(p => {
+    tabla.innerHTML += `
+      <tr>
+        <td>${p.nombreProducto}</td>
+        <td>${p.categoria}</td>
+        <td>${p.cantidad}</td>
+        <td>${p.precio}</td>
+        <td>
+          <button onclick="editar(${p.id_producto})" class="accion">Editar</button>
+          <button onclick="eliminar(${p.id_producto})" class="accion">Eliminar</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+// --- EDITAR ---
+function editar(id){
+  localStorage.setItem("editarIdInventario", id);
+  window.location.href = "AgregarInventario.html";
+}
+
+// --- ELIMINAR ---
+async function eliminar(id){
+  if(confirm("¿Seguro quieres eliminar este producto?")){
+    const res = await fetch("../Controlador/inventarioControlador.php?accion=eliminar", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({id})
+    });
+    const result = await res.json();
+    alert(result.mensaje || "Producto eliminado.");
+    cargarInventario();
+  }
+}
+
+// --- BUSCAR MIENTRAS ESCRIBES ---
+document.getElementById("buscarProducto").addEventListener("input", () => {
+  const valor = document.getElementById("buscarProducto").value.toLowerCase();
+  const filtrados = productos.filter(p => p.nombreProducto.toLowerCase().includes(valor) || p.categoria.toLowerCase().includes(valor));
+  mostrarProductos(filtrados);
+});
+
+// --- BUSCAR CON LUPA ---
+document.getElementById("buscarBtn").addEventListener("click", () => {
+  const valor = document.getElementById("buscarProducto").value.toLowerCase();
+  const filtrados = productos.filter(p => p.nombreProducto.toLowerCase().includes(valor) || p.categoria.toLowerCase().includes(valor));
+  mostrarProductos(filtrados);
+});
+
+cargarInventario();
+</script>
+
+</body>
+</html>

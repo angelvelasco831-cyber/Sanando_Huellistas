@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sanando Huellitas</title>
+  <link rel="stylesheet" href="estilos.css">
+  <link rel="stylesheet" href="estilosR.css">
+  <script src="https://kit.fontawesome.com/d748c5e5cf.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header>
+    <button id="toggleMenu">☰</button>
+    <img src="imagenes/mm.png" alt="Logo Sanando Huellita" class="logo">
+    <h1>Sanando Huellita</h1>
+  </header>
+
+  <aside id="menuLateral" class="oculto">
+    <ul>
+      <li><a href="ClientesR.html">CLIENTES</a></li>
+      <li><a href="Mascotas.html">MASCOTAS</a></li>
+      <li><a href="Citas.html">CITAS</a></li>
+      <li><a href="Inventari.html">INVENTARIO</a></li>
+    </ul>
+  </aside>
+
+  <main>
+    <!-- ===== BANNER ===== -->
+    <section class="banner">
+      <img src="imagenes/Banner1.jpeg" alt="Banner principal" class="imagen-banner">
+      <div class="texto-banner">
+        <h2>Sanando Huellitas</h2>
+        <p>Sanando huellitas, paz entre vida y dolor</p>
+        <button class="boton">Saber más</button>
+      </div>
+    </section>
+
+    <!-- ===== SECCIONES ===== -->
+    <section class="servicios">
+      <div class="servicio">
+        
+        <h3></h3>
+      </div>
+      <div class="servicio">
+        <img src="imagenes/cuidado.png" alt="Cuidado">
+        <h3>Cuidado</h3>
+      </div>
+      <div class="servicio">
+        <img src="imagenes/veterinario.png" alt="Veterinario">
+        <h3>Veterinario</h3>
+      </div>
+    </section>
+
+    <!-- ===== HISTORIA ===== -->
+    <section class="historia">
+      <h2>Nuestra Historia</h2>
+      <p>
+        “Sanando Huellitas” nació del amor hacia los animales y el deseo de brindarles una vida mejor. 
+        Desde nuestros inicios, hemos trabajado para rescatar, cuidar y dar una segunda oportunidad a 
+        cientos de mascotas. Creemos que cada huellita cuenta, y nuestro compromiso es sanar tanto sus 
+        cuerpos como sus corazones.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const boton = document.getElementById('toggleMenu');
+    const menu = document.getElementById('menuLateral');
+    const main = document.querySelector('main');
+
+    boton.addEventListener('click', () => {
+      menu.classList.toggle('oculto');
+      main.classList.toggle('reducido');
+    });
+  </script>
+</body>
+</html>

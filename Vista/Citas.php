@@ -1,0 +1,200 @@
+<?php
+require_once '../Controlador/seguridad.php';
+permitirSolo(["admin", "recepcionista" , "veterinario"]);
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanando Huellita - Citas</title>
+<link rel="stylesheet" href="estilosEM.css">
+<link rel="stylesheet" href="estilosEMR.css">
+<script src="https://kit.fontawesome.com/d748c5e5cf.js" crossorigin="anonymous"></script>
+<style>
+/* Estilo para el buscador */
+#buscarBtn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #F28482;
+  background-color: #F28482;
+  color: white;
+  cursor: pointer;
+  margin-left: 4px;
+}
+#buscarBtn:hover {
+  background-color: #e06666;
+}
+.busqueda-container {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  max-width: 400px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button id="toggleMenu" aria-label="Abrir menú">☰</button>
+  <img src="imagenes/mm.png" alt="Logo Sanando Huellita" class="logo" />
+  <h1>Citas</h1>
+</header>
+
+<aside id="menuLateral" class="oculto">
+  <ul>
+    <li><a href="Menu.html">INICIO</a></li>
+    <li><a href="Citas.html" class="activo">CITAS</a></li>
+  </ul>
+</aside>
+
+<main>
+  <div class="area-empleado">
+    <h2>Gestión de Citas</h2>
+    <div class="imagen-empleados">
+      <img src="imagenes/Cita.png" alt="Citas Programadas">
+    </div>
+    <p class="descripcion">
+      Aquí puedes ver, editar, eliminar o reprogramar las citas agendadas. Para agregar una nueva, haz clic en “Agendar Cita”.
+    </p>
+
+    <!-- BUSCADOR CON LUPA -->
+    <div class="busqueda-container">
+      <input type="text" id="buscarCita" placeholder="Buscar por cliente o mascota..." style="padding:8px;border-radius:6px;border:1px solid #F28482;width:100%;">
+      <button id="buscarBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+
+    <div class="contenido">
+      <table class="table-empleados" id="tablaCitas">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Mascota</th>
+            <th>Servicio</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Observaciones</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="botones">
+      <button class="btn" onclick="window.location.href='agendarCita.php'">Agendar Cita</button>
+    </div>
+  </div>
+</main>
+
+<script>
+const menu = document.getElementById('menuLateral');
+const boton = document.getElementById('toggleMenu');
+const main = document.querySelector('main');
+
+boton.addEventListener('click', () => {
+  menu.classList.toggle('oculto');
+  main.classList.toggle('reducido');
+});
+
+let clientes = [];
+let mascotas = [];
+let servicios = [];
+let citas = [];
+
+// Cargar datos relacionales
+async function cargarDatosRelacionales() {
+  const resClientes = await fetch("../Controlador/clienteControlador.php?accion=listar");
+  clientes = await resClientes.json();
+
+  const resMascotas = await fetch("../Controlador/mascotaControlador.php?accion=listar");
+  mascotas = await resMascotas.json();
+
+  const resServicios = await fetch("../Controlador/servicioControlador.php?accion=listar");
+  servicios = await resServicios.json();
+}
+
+// Mostrar citas en tabla
+function mostrarCitas(citasArray) {
+  const tabla = document.querySelector("#tablaCitas tbody");
+  tabla.innerHTML = "";
+
+  citasArray.forEach(c => {
+    let nombreCliente = clientes.find(cl => cl.id_cliente == c.cliente)?.nombre || c.cliente;
+    let nombreMascota = mascotas.find(m => m.id_mascota == c.mascota)?.nombre || c.mascota;
+    let nombreServicio = servicios.find(s => s.id_servicio == c.servicio)?.nombre || c.servicio;
+
+    tabla.innerHTML += `
+      <tr>
+        <td>${nombreCliente}</td>
+        <td>${nombreMascota}</td>
+        <td>${nombreServicio}</td>
+        <td>${c.fecha}</td>
+        <td>${c.hora}</td>
+        <td>${c.observaciones}</td>
+        <td>
+          <button onclick="editar(${c.id_cita})" class="accion">Editar</button>
+          <button onclick="eliminar(${c.id_cita})" class="accion">Eliminar</button>
+        </td>
+      </tr>`;
+  });
+}
+
+// Cargar citas
+async function cargarCitas() {
+  try {
+    await cargarDatosRelacionales();
+    const res = await fetch("../Controlador/citaControlador.php?accion=listar");
+    citas = await res.json();
+    mostrarCitas(citas);
+  } catch(err) {
+    console.error("Error al cargar las citas:", err);
+  }
+}
+
+// Editar y eliminar
+function editar(id) {
+  localStorage.setItem("editarCitaId", id);
+  window.location.href = "agendarCita.php";
+}
+
+async function eliminar(id) {
+  if(confirm("¿Seguro deseas eliminar esta cita?")) {
+    const res = await fetch("../Controlador/citaControlador.php?accion=eliminar", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({id})
+    });
+    const result = await res.json();
+    alert(result.mensaje || "Cita eliminada.");
+    cargarCitas();
+  }
+}
+
+// 🔍 Buscar mientras escribes
+document.getElementById("buscarCita").addEventListener("input", () => {
+  const valor = document.getElementById("buscarCita").value.toLowerCase();
+  const filtradas = citas.filter(c => {
+    let nombreCliente = clientes.find(cl => cl.id_cliente == c.cliente)?.nombre.toLowerCase() || "";
+    let nombreMascota = mascotas.find(m => m.id_mascota == c.mascota)?.nombre.toLowerCase() || "";
+    return nombreCliente.includes(valor) || nombreMascota.includes(valor);
+  });
+  mostrarCitas(filtradas);
+});
+
+// 🔍 Buscar con lupa
+document.getElementById("buscarBtn").addEventListener("click", () => {
+  const valor = document.getElementById("buscarCita").value.toLowerCase();
+  const filtradas = citas.filter(c => {
+    let nombreCliente = clientes.find(cl => cl.id_cliente == c.cliente)?.nombre.toLowerCase() || "";
+    let nombreMascota = mascotas.find(m => m.id_mascota == c.mascota)?.nombre.toLowerCase() || "";
+    return nombreCliente.includes(valor) || nombreMascota.includes(valor);
+  });
+  mostrarCitas(filtradas);
+});
+
+cargarCitas();
+</script>
+
+</body>
+</html>
